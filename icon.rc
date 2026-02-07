@@ -1,0 +1,4 @@
+// Windows resource file for embedding icon
+// This file tells the compiler to include the icon in the .exe
+
+1 ICON "icon.ico"

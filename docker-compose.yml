@@ -1,0 +1,18 @@
+# Docker Compose for Color Blindness Widget
+# Note: This requires X11 forwarding and is NOT recommended for production use
+# Use native executable instead for desktop widgets
+
+version: '3.8'
+
+services:
+  colorblind-widget:
+    build: .
+    image: colorblind-widget:latest
+    container_name: colorblind-widget
+    environment:
+      - DISPLAY=${DISPLAY:-host.docker.internal:0}
+    network_mode: host
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    stdin_open: true
+    tty: true

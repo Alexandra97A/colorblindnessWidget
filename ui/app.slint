@@ -1,0 +1,290 @@
+import { Button, VerticalBox, HorizontalBox, LineEdit, TabWidget, ComboBox, ScrollView, ListView } from "std-widgets.slint";
+
+struct ColorItem {
+    color: color,
+    original-rgb: string,
+    simulated-rgb: string,
+}
+
+export component AppWindow inherits Window {
+    title: "Color Blindness Checker";
+    preferred-width: 800px;
+    preferred-height: 600px;
+    background: transparent;
+    
+    callback load-image();
+    callback take-screenshot();
+    callback add-color(string);
+    callback remove-color(int);
+    callback simulate-colorblindness(string);
+    
+    in-out property <string> color-input: "";
+    in-out property <string> current-simulation: "Normal";
+    in-out property <image> preview-image;
+    in-out property <bool> has-image: false;
+    in-out property <[ColorItem]> color-palette: [];
+    in-out property <string> status-message: "";
+    
+    Rectangle {
+        background: #ffffff;
+        border-radius: 12px;
+        drop-shadow-blur: 20px;
+        drop-shadow-color: #00000040;
+        drop-shadow-offset-y: 4px;
+        
+        VerticalBox {
+            padding: 20px;
+            spacing: 15px;
+        
+        // Header
+        Text {
+            text: "Color Blindness Accessibility Checker";
+            font-size: 24px;
+            font-weight: 700;
+            horizontal-alignment: center;
+        }
+        
+        TabWidget {
+            Tab {
+                title: "Color Palette";
+                
+                VerticalBox {
+                    spacing: 15px;
+                    padding: 10px;
+                    
+                    // Color input section
+                    HorizontalBox {
+                        spacing: 10px;
+                        alignment: stretch;
+                        
+                        Text {
+                            text: "Add Color:";
+                            vertical-alignment: center;
+                            font-size: 14px;
+                        }
+                        
+                        LineEdit {
+                            placeholder-text: "HEX (#FF0000), RGB (255,0,0), or RGBL";
+                            text <=> root.color-input;
+                            horizontal-stretch: 1;
+                        }
+                        
+                        Button {
+                            text: "Add";
+                            clicked => {
+                                root.add-color(root.color-input);
+                            }
+                        }
+                    }
+                    
+                    // Status message
+                    if root.status-message != "": Text {
+                        text: root.status-message;
+                        font-size: 12px;
+                        color: #666;
+                    }
+                    
+                    // Simulation type selector
+                    HorizontalBox {
+                        spacing: 10px;
+                        alignment: start;
+                        
+                        Text {
+                            text: "Simulation:";
+                            vertical-alignment: center;
+                            font-size: 14px;
+                        }
+                        
+                        ComboBox {
+                            model: ["Normal", "Protanopia (Red-Blind)", "Deuteranopia (Green-Blind)", "Tritanopia (Blue-Blind)", "Protanomaly", "Deuteranomaly", "Tritanomaly", "Achromatopsia"];
+                            current-value <=> root.current-simulation;
+                            selected => {
+                                root.simulate-colorblindness(root.current-simulation);
+                            }
+                        }
+                    }
+                    
+                    // Color palette display
+                    ScrollView {
+                        vertical-stretch: 1;
+                        
+                        VerticalBox {
+                            spacing: 10px;
+                            
+                            if root.color-palette.length == 0: Rectangle {
+                                height: 100px;
+                                background: #f8f8f8;
+                                border-width: 2px;
+                                border-color: #ddd;
+                                border-radius: 8px;
+                                
+                                Text {
+                                    text: "No colors added yet\nEnter a color above and click 'Add'";
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                    color: #999;
+                                }
+                            }
+                            
+                            for color-item[index] in root.color-palette: Rectangle {
+                                height: 80px;
+                                border-width: 2px;
+                                border-color: #ddd;
+                                border-radius: 8px;
+                                
+                                HorizontalBox {
+                                    padding: 10px;
+                                    spacing: 10px;
+                                    
+                                    // Color preview
+                                    Rectangle {
+                                        width: 60px;
+                                        background: color-item.color;
+                                        border-width: 1px;
+                                        border-color: #333;
+                                        border-radius: 5px;
+                                    }
+                                    
+                                    // Color info
+                                    VerticalBox {
+                                        horizontal-stretch: 1;
+                                        spacing: 5px;
+                                        
+                                        Text {
+                                            text: "Original: " + color-item.original-rgb;
+                                            font-size: 12px;
+                                        }
+                                        
+                                        Text {
+                                            text: "Simulated: " + color-item.simulated-rgb;
+                                            font-size: 12px;
+                                            color: #666;
+                                        }
+                                    }
+                                    
+                                    // Remove button
+                                    Button {
+                                        text: "Remove";
+                                        clicked => {
+                                            root.remove-color(index);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Tab {
+                title: "Image Analysis";
+                
+                VerticalBox {
+                    spacing: 15px;
+                    padding: 10px;
+                    
+                    // Image controls
+                    HorizontalBox {
+                        spacing: 10px;
+                        
+                        Button {
+                            text: "Load Image";
+                            clicked => {
+                                root.load-image();
+                            }
+                        }
+                        
+                        Button {
+                            text: "Take Screenshot";
+                            clicked => {
+                                root.take-screenshot();
+                            }
+                        }
+                    }
+                    
+                    // Simulation selector for image
+                    HorizontalBox {
+                        spacing: 10px;
+                        alignment: start;
+                        
+                        Text {
+                            text: "View as:";
+                            vertical-alignment: center;
+                        }
+                        
+                        ComboBox {
+                            model: ["Normal", "Protanopia (Red-Blind)", "Deuteranopia (Green-Blind)", "Tritanopia (Blue-Blind)", "Protanomaly", "Deuteranomaly", "Tritanomaly", "Achromatopsia"];
+                            current-value <=> root.current-simulation;
+                            selected => {
+                                root.simulate-colorblindness(root.current-simulation);
+                            }
+                        }
+                    }
+                    
+                    // Image preview
+                    ScrollView {
+                        vertical-stretch: 1;
+                        
+                        if root.has-image: Image {
+                            source: root.preview-image;
+                            width: 100%;
+                            image-fit: contain;
+                        }
+                        
+                        if !root.has-image: Rectangle {
+                            background: #f0f0f0;
+                            border-width: 2px;
+                            border-color: #ccc;
+                            border-radius: 5px;
+                            
+                            Text {
+                                text: "No image loaded\nClick 'Load Image' or 'Take Screenshot' to begin";
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                                color: #666;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Tab {
+                title: "About";
+                
+                VerticalBox {
+                    spacing: 15px;
+                    padding: 20px;
+                    
+                    Text {
+                        text: "Color Blindness Types";
+                        font-size: 18px;
+                        font-weight: 700;
+                    }
+                    
+                    Text {
+                        text: "• Protanopia: Red color blindness (affects ~1% of males)\n• Deuteranopia: Green color blindness (affects ~1% of males)\n• Tritanopia: Blue color blindness (very rare)\n• Protanomaly: Red weakness (affects ~1% of males)\n• Deuteranomaly: Green weakness (affects ~5% of males)\n• Tritanomaly: Blue weakness (very rare)\n• Achromatopsia: Complete color blindness (very rare)";
+                        wrap: word-wrap;
+                        font-size: 12px;
+                    }
+                    
+                    Rectangle {
+                        height: 20px;
+                    }
+                    
+                    Text {
+                        text: "How to Use";
+                        font-size: 18px;
+                        font-weight: 700;
+                    }
+                    
+                    Text {
+                        text: "1. Color Palette Tab: Add multiple colors in HEX (#FF0000), RGB (255,0,0), or RGBL format\n2. Image Analysis Tab: Load an image or take a screenshot\n3. Select different color blindness simulations to see how it appears\n4. Ensure your designs are accessible to all users!";
+                        wrap: word-wrap;
+                        font-size: 12px;
+                    }
+                }
+            }
+        }
+        }
+    }
+}
