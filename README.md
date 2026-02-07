@@ -155,19 +155,7 @@ colorblind-widget/
 
 ## 🐳 Docker Support
 
-Docker files are included but **NOT RECOMMENDED** for GUI desktop applications. Docker is designed for server applications and requires complex X11 forwarding setup for GUI apps on Windows.
-
-**For the best experience, use the native executable with desktop shortcuts!**
-
-If you still want to explore Docker, see [SETUP.md](SETUP.md) for instructions.
-
-## 🚀 Publishing to GitHub
-
-See [SETUP.md](SETUP.md) for step-by-step instructions on:
-- Initializing your Git repository
-- Creating a GitHub repository
-- Pushing your code to GitHub
-- Using GitHub Desktop (easier option)
+Docker files are included but **NOT RECOMMENDED** for GUI desktop applications. I added them since I am learning Docker, but please ignore them. This is not a server application.
 
 Quick command reference:
 ```powershell
